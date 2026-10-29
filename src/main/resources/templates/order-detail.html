@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('订单详情')}"></head>
+<body>
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar('orders')}"></aside>
+    <div class="main-area">
+        <header th:replace="~{fragments/layout :: topbar('订单详情', '确认预订、办理入住并跟进住客体验')}"></header>
+        <main class="page">
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <section class="order-summary-band">
+                <div>
+                    <span class="status-badge"
+                          th:classappend="${'status-' + order.status.tone}"
+                          th:text="${order.status.label}">状态</span>
+                    <h2 th:text="${order.orderNo}">订单号</h2>
+                    <p th:text="'创建于 ' + ${#temporals.format(order.createdAt, 'yyyy-MM-dd HH:mm')}">创建时间</p>
+                </div>
+                <div class="order-summary-actions">
+                    <a class="button" th:href="@{/orders}">
+                        <i data-lucide="arrow-left"></i> 返回列表
+                    </a>
+                    <form th:if="${order.status.name() == 'PENDING'}" th:action="@{/orders/{id}/status(id=${order.id})}" method="post">
+                        <input type="hidden" name="status" value="CONFIRMED">
+                        <button class="button button-accent" type="submit">
+                            <i data-lucide="circle-check"></i> 确认订单
+                        </button>
+                    </form>
+                    <form th:if="${order.status.name() == 'CONFIRMED'}" th:action="@{/orders/{id}/status(id=${order.id})}" method="post">
+                        <input type="hidden" name="status" value="CHECKED_IN">
+                        <button class="button button-accent" type="submit">
+                            <i data-lucide="key-round"></i> 办理入住
+                        </button>
+                    </form>
+                    <form th:if="${order.status.name() == 'CHECKED_IN'}" th:action="@{/orders/{id}/status(id=${order.id})}" method="post">
+                        <input type="hidden" name="status" value="COMPLETED">
+                        <button class="button button-accent" type="submit">
+                            <i data-lucide="flag"></i> 完成订单
+                        </button>
+                    </form>
+                    <form th:if="${(order.status.name() == 'PENDING' || order.status.name() == 'CONFIRMED')}"
+                          th:action="@{/orders/{id}/status(id=${order.id})}" method="post"
+                          data-confirm="取消订单后将释放对应日期房量，确定继续吗？">
+                        <input type="hidden" name="status" value="CANCELLED">
+                        <button class="button" type="submit">
+                            <i data-lucide="x"></i> 取消预订
+                        </button>
+                    </form>
+                    <a class="button" th:if="${order.status.name() == 'COMPLETED' && !hasReview}"
+                       th:href="@{/reviews/new(orderId=${order.id})}">
+                        <i data-lucide="star"></i> 录入评价
+                    </a>
+                </div>
+            </section>
+
+            <section class="stay-strip">
+                <img th:src="${order.room.coverImage}" th:alt="${order.room.name}">
+                <div class="stay-strip-body">
+                    <div>
+                        <span class="eyebrow">STAY DETAILS</span>
+                        <h3 th:text="${order.room.homestay.name} + ' · ' + ${order.room.name}">门店与房型</h3>
+                        <p th:text="${order.room.homestay.address}">地址</p>
+                    </div>
+                    <a class="button button-sm" th:href="@{/homestays/{id}(id=${order.room.homestay.id})}">
+                        查看门店 <i data-lucide="arrow-up-right"></i>
+                    </a>
+                </div>
+            </section>
+
+            <div class="order-detail-grid">
+                <div>
+                    <section class="panel">
+                        <div class="panel-head">
+                            <div>
+                                <h3>预订信息</h3>
+                                <p>住客、日期和房间数量</p>
+                            </div>
+                        </div>
+                        <div class="detail-list">
+                            <div class="detail-list-item">
+                                <span>入住人</span>
+                                <strong th:text="${order.guestName}">住客</strong>
+                            </div>
+                            <div class="detail-list-item">
+                                <span>联系电话</span>
+                                <strong th:text="${order.guestPhone}">电话</strong>
+                            </div>
+                            <div class="detail-list-item">
+                                <span>入住日期</span>
+                                <strong th:text="${#temporals.format(order.checkIn, 'yyyy年MM月dd日')}">日期</strong>
+                            </div>
+                            <div class="detail-list-item">
+                                <span>离店日期</span>
+                                <strong th:text="${#temporals.format(order.checkOut, 'yyyy年MM月dd日')}">日期</strong>
+                            </div>
+                            <div class="detail-list-item">
+                                <span>入住晚数</span>
+                                <strong th:text="${order.nights} + ' 晚'">晚数</strong>
+                            </div>
+                            <div class="detail-list-item">
+                                <span>房间与人数</span>
+                                <strong th:text="${order.roomCount} + ' 间 · ' + ${order.guests} + ' 人'">房间</strong>
+                            </div>
+                            <div class="detail-list-item">
+                                <span>订单金额</span>
+                                <strong class="money" style="font-size:18px;"
+                                        th:text="${#numbers.formatDecimal(order.totalAmount, 1, 'COMMA', 0, 'POINT')}">0</strong>
+                            </div>
+                            <div class="detail-list-item">
+                                <span>最后更新</span>
+                                <strong th:text="${#temporals.format(order.updatedAt, 'MM-dd HH:mm')}">更新时间</strong>
+                            </div>
+                            <div class="detail-list-item" style="grid-column:1/-1;">
+                                <span>住客备注</span>
+                                <strong style="font-weight:400;color:var(--muted);"
+                                        th:text="${order.note != null && !order.note.isBlank() ? order.note : '无特别备注'}">备注</strong>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <aside class="panel">
+                    <div class="panel-head">
+                        <div>
+                            <h3>订单进度</h3>
+                            <p>从预订到离店的完整状态</p>
+                        </div>
+                    </div>
+                    <div class="timeline">
+                        <div class="timeline-item done">
+                            <span class="timeline-dot"></span>
+                            <div class="timeline-content">
+                                <strong>预订已创建</strong>
+                                <span th:text="${#temporals.format(order.createdAt, 'MM-dd HH:mm')}">时间</span>
+                            </div>
+                        </div>
+                        <div class="timeline-item"
+                             th:classappend="${order.status.name() != 'PENDING' && order.status.name() != 'CANCELLED'} ? ' done' : ''">
+                            <span class="timeline-dot"></span>
+                            <div class="timeline-content">
+                                <strong>商家确认</strong>
+                                <span>确认房量与到店安排</span>
+                            </div>
+                        </div>
+                        <div class="timeline-item"
+                             th:classappend="${order.status.name() == 'CHECKED_IN' || order.status.name() == 'COMPLETED'} ? ' done' : ''">
+                            <span class="timeline-dot"></span>
+                            <div class="timeline-content">
+                                <strong>客人入住</strong>
+                                <span th:text="${#temporals.format(order.checkIn, 'MM月dd日')}">入住日期</span>
+                            </div>
+                        </div>
+                        <div class="timeline-item"
+                             th:classappend="${order.status.name() == 'COMPLETED'} ? ' done' : ''">
+                            <span class="timeline-dot"></span>
+                            <div class="timeline-content">
+                                <strong>订单完成</strong>
+                                <span th:text="${#temporals.format(order.checkOut, 'MM月dd日')}">离店日期</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div th:if="${order.status.name() == 'CANCELLED'}"
+                         style="margin:0 20px 20px;padding:10px 12px;color:var(--danger);background:var(--danger-soft);border-radius:6px;font-size:11px;">
+                        该订单已取消，对应日期房量已自动释放。
+                    </div>
+                </aside>
+            </div>
+        </main>
+    </div>
+</div>
+<nav th:replace="~{fragments/layout :: mobileNav('orders')}"></nav>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('门店房源')}"></head>
+<body>
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar('homestays')}"></aside>
+    <div class="main-area">
+        <header th:replace="~{fragments/layout :: topbar('门店房源', '管理门店档案、图片与在售房型')}"></header>
+        <main class="page">
+            <div th:replace="~{fragments/layout :: flash}"></div>
+            <section class="page-heading">
+                <div>
+                    <span class="eyebrow">STAY COLLECTION</span>
+                    <h2>在山川与城市之间，安置每一段旅程</h2>
+                    <p>统一查看门店介绍、房量规模与当前在售状态，进入门店后可继续管理房型和预订。</p>
+                </div>
+                <div class="heading-actions">
+                    <a class="button button-primary" th:href="@{/homestays/new}">
+                        <i data-lucide="plus"></i> 新增门店
+                    </a>
+                </div>
+            </section>
+
+            <div class="toolbar">
+                <form class="search-form" th:action="@{/homestays}" method="get">
+                    <div class="search-field">
+                        <i data-lucide="search"></i>
+                        <input type="search" name="q" th:value="${query}" placeholder="搜索门店名称或所在城市">
+                    </div>
+                    <button class="button" type="submit">搜索</button>
+                </form>
+                <span class="inventory-count">共 <strong th:text="${cards.size()}">0</strong> 家在营门店</span>
+            </div>
+
+            <section class="homestay-grid" th:if="${!cards.isEmpty()}">
+                <article class="homestay-card" th:each="card : ${cards}">
+                    <div class="homestay-cover">
+                        <img th:src="${card.homestay.coverImage}" th:alt="${card.homestay.name}">
+                        <span class="cover-badge">
+                            <span class="status-badge" th:text="${card.homestay.active ? '营业中' : '已停用'}">营业中</span>
+                        </span>
+                    </div>
+                    <div class="homestay-body">
+                        <div class="homestay-title-row">
+                            <div>
+                                <h3 th:text="${card.homestay.name}">云栖山居</h3>
+                                <span class="location">
+                                    <i data-lucide="map-pin"></i>
+                                    <span th:text="${card.homestay.city} + ' · ' + ${card.homestay.address}">地址</span>
+                                </span>
+                            </div>
+                        </div>
+                        <p class="homestay-summary" th:text="${card.homestay.summary}">门店介绍</p>
+                        <div class="tag-row" th:if="${card.homestay.tags != null}">
+                            <span class="tag" th:each="tag : ${#strings.arraySplit(card.homestay.tags, ',')}"
+                                  th:text="${#strings.trim(tag)}">标签</span>
+                        </div>
+                        <div class="homestay-footer">
+                            <span class="inventory-count"><strong th:text="${card.totalRooms}">0</strong>间可售客房</span>
+                            <div class="card-actions">
+                                <a class="icon-button" th:href="@{/homestays/{id}/edit(id=${card.homestay.id})}"
+                                   title="编辑门店" aria-label="编辑门店">
+                                    <i data-lucide="pencil"></i>
+                                </a>
+                                <a class="button button-sm" th:href="@{/homestays/{id}(id=${card.homestay.id})}">
+                                    查看门店 <i data-lucide="arrow-up-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </section>
+
+            <section class="panel" th:if="${cards.isEmpty()}">
+                <div class="empty-state">
+                    <div>
+                        <span class="empty-state-icon"><i data-lucide="search-x"></i></span>
+                        <strong>没有找到匹配的门店</strong>
+                        <p>换一个名称或城市关键词试试。</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+<nav th:replace="~{fragments/layout :: mobileNav('homestays')}"></nav>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

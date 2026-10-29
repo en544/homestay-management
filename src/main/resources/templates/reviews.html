@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('住客评价')}"></head>
+<body>
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar('reviews')}"></aside>
+    <div class="main-area">
+        <header th:replace="~{fragments/layout :: topbar('住客评价', '回应真实反馈，沉淀门店口碑')}"></header>
+        <main class="page">
+            <div th:replace="~{fragments/layout :: flash}"></div>
+            <section class="page-heading">
+                <div>
+                    <span class="eyebrow">GUEST VOICE</span>
+                    <h2>认真听见，每一段入住感受</h2>
+                    <p>公开评价会计入门店平均评分。你可以回复客人，也可以临时隐藏不适合展示的内容。</p>
+                </div>
+                <a class="button" th:href="@{/orders(status='COMPLETED')}">
+                    <i data-lucide="receipt-check"></i> 查看已完成订单
+                </a>
+            </section>
+
+            <section class="review-summary">
+                <div>
+                    <div class="rating-big">
+                        <strong th:text="${#numbers.formatDecimal(averageRating, 1, 1)}">4.9</strong><span>/ 5.0</span>
+                    </div>
+                    <div class="rating-stars">
+                        <i data-lucide="star"></i><i data-lucide="star"></i><i data-lucide="star"></i>
+                        <i data-lucide="star"></i><i data-lucide="star"></i>
+                    </div>
+                    <p style="margin:8px 0 0;color:var(--muted);font-size:11px;">
+                        基于 <strong style="color:var(--ink);" th:text="${reviews.size()}">0</strong> 条住客评价
+                    </p>
+                </div>
+                <div>
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:9px;">
+                        <span style="width:42px;color:var(--muted);font-size:10px;">5 星</span>
+                        <span style="height:6px;flex:1;overflow:hidden;background:#efede6;border-radius:99px;">
+                            <span style="display:block;width:88%;height:100%;background:var(--brand);border-radius:99px;"></span>
+                        </span>
+                        <strong style="font-size:10px;">88%</strong>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:9px;">
+                        <span style="width:42px;color:var(--muted);font-size:10px;">4 星</span>
+                        <span style="height:6px;flex:1;overflow:hidden;background:#efede6;border-radius:99px;">
+                            <span style="display:block;width:12%;height:100%;background:#8ba99f;border-radius:99px;"></span>
+                        </span>
+                        <strong style="font-size:10px;">12%</strong>
+                    </div>
+                    <p style="margin:14px 0 0;color:var(--muted);font-size:11px;line-height:1.8;">
+                        高分反馈集中在空间安静、早餐与管家服务。及时回复能提升潜在住客的预订信心。
+                    </p>
+                </div>
+            </section>
+
+            <section class="review-list" th:if="${!reviews.isEmpty()}">
+                <article class="review-card" th:each="review : ${reviews}"
+                         th:classappend="${!review.visible} ? ' review-hidden' : ''">
+                    <div class="review-head">
+                        <div class="reviewer">
+                            <span class="reviewer-avatar"
+                                  th:text="${#strings.substring(review.order.guestName, 0, 1)}">客</span>
+                            <span>
+                                <strong th:text="${review.order.guestName}">住客</strong>
+                                <span th:text="${review.order.room.homestay.name} + ' · ' + ${review.order.room.name}">门店</span>
+                            </span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <div class="rating-stars" style="margin:0;">
+                                <i data-lucide="star" th:each="i : ${#numbers.sequence(1, review.rating)}"></i>
+                            </div>
+                            <span class="status-badge"
+                                  th:classappend="${review.visible ? 'status-success' : 'status-neutral'}"
+                                  th:text="${review.visible ? '公开' : '已隐藏'}">公开</span>
+                        </div>
+                    </div>
+                    <p class="review-content" th:text="${review.content}">评价内容</p>
+                    <div style="display:flex;justify-content:space-between;gap:12px;color:var(--faint);font-size:10px;">
+                        <span th:text="${#temporals.format(review.createdAt, 'yyyy-MM-dd HH:mm')}">评价时间</span>
+                        <span th:text="'订单 ' + ${review.order.orderNo}">订单号</span>
+                    </div>
+
+                    <div class="merchant-reply" th:if="${review.reply != null && !review.reply.isBlank()}">
+                        <strong>商家回复</strong><br>
+                        <span th:text="${review.reply}">回复内容</span>
+                    </div>
+
+                    <form class="reply-form" th:action="@{/reviews/{id}/reply(id=${review.id})}" method="post">
+                        <input class="form-control" type="text" name="reply"
+                               th:value="${review.reply}" placeholder="写一段真诚的回复">
+                        <button class="button button-sm button-primary" type="submit">
+                            <i data-lucide="send"></i> 保存回复
+                        </button>
+                    </form>
+                    <div style="margin-top:7px;text-align:right;">
+                        <form th:action="@{/reviews/{id}/visibility(id=${review.id})}" method="post" style="display:inline;">
+                            <button class="button button-sm button-ghost" type="submit">
+                                <i data-lucide="eye-off"></i>
+                                <span th:text="${review.visible ? '隐藏评价' : '恢复公开'}">隐藏评价</span>
+                            </button>
+                        </form>
+                    </div>
+                </article>
+            </section>
+
+            <section class="panel" th:if="${reviews.isEmpty()}">
+                <div class="empty-state">
+                    <div>
+                        <span class="empty-state-icon"><i data-lucide="message-square-text"></i></span>
+                        <strong>还没有住客评价</strong>
+                        <p>完成订单后可以为住客录入评价。</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+<nav th:replace="~{fragments/layout :: mobileNav('reviews')}"></nav>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

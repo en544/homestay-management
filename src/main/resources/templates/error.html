@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('操作提示')}"></head>
+<body>
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar('')}"></aside>
+    <div class="main-area">
+        <header th:replace="~{fragments/layout :: topbar('操作提示', '房源与订单数据保持安全')}"></header>
+        <main class="page">
+            <div class="error-page">
+                <div>
+                    <div class="error-code">Oops</div>
+                    <h2 th:text="${errorTitle != null ? errorTitle : '页面暂时不可用'}">页面暂时不可用</h2>
+                    <p th:text="${errorMessage != null ? errorMessage : '请返回上一页后重试。'}">请返回上一页后重试。</p>
+                    <a class="button button-primary" th:href="@{/}">
+                        <i data-lucide="arrow-left"></i> 返回经营概览
+                    </a>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

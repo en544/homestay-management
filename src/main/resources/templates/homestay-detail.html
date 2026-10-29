@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${homestay.name})}"></head>
+<body>
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar('homestays')}"></aside>
+    <div class="main-area">
+        <header th:replace="~{fragments/layout :: topbar('门店详情', '查看门店介绍、在售房型与今日余量')}"></header>
+        <main class="page">
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <section class="detail-hero">
+                <img class="detail-hero-image" th:src="${homestay.coverImage}" th:alt="${homestay.name}">
+                <div class="detail-hero-content">
+                    <span class="eyebrow" th:text="${homestay.city} + ' · QIJU STAY'">城市</span>
+                    <h2 th:text="${homestay.name}">云栖山居</h2>
+                    <p th:text="${homestay.summary}">门店介绍</p>
+                    <div class="tag-row" th:if="${homestay.tags != null}">
+                        <span class="tag" th:each="tag : ${#strings.arraySplit(homestay.tags, ',')}"
+                              th:text="${#strings.trim(tag)}">标签</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="detail-meta-bar">
+                <div class="detail-meta-item">
+                    <span class="detail-meta-icon"><i data-lucide="map-pin"></i></span>
+                    <span>
+                        <strong th:text="${homestay.address}">地址</strong>
+                        <span>门店地址</span>
+                    </span>
+                </div>
+                <div class="detail-meta-item">
+                    <span class="detail-meta-icon"><i data-lucide="bed-double"></i></span>
+                    <span>
+                        <strong th:text="${rooms.size()} + ' 种房型'">房型</strong>
+                        <span>当前在售</span>
+                    </span>
+                </div>
+                <div class="detail-meta-item">
+                    <span class="detail-meta-icon"><i data-lucide="sparkles"></i></span>
+                    <span>
+                        <strong th:text="${homestay.active ? '正常营业' : '暂停营业'}">营业状态</strong>
+                        <span>门店状态</span>
+                    </span>
+                </div>
+                <div class="detail-meta-item">
+                    <span class="detail-meta-icon"><i data-lucide="phone-call"></i></span>
+                    <span>
+                        <strong>400-820-1024</strong>
+                        <span>门店服务电话</span>
+                    </span>
+                </div>
+            </section>
+
+            <div class="form-layout">
+                <div>
+                    <div class="section-heading">
+                        <div>
+                            <h3>门店介绍</h3>
+                            <p>为住客准备的空间与体验</p>
+                        </div>
+                        <a class="button button-sm" th:href="@{/homestays/{id}/edit(id=${homestay.id})}">
+                            <i data-lucide="pencil"></i> 编辑档案
+                        </a>
+                    </div>
+                    <section class="panel">
+                        <div style="padding: 22px; color: var(--muted); font-size: 13px; line-height: 2;"
+                             th:text="${homestay.description}">门店详情</div>
+                    </section>
+                </div>
+                <aside class="panel" style="padding: 22px;">
+                    <span class="eyebrow">TODAY'S NOTES</span>
+                    <h3 style="margin: 6px 0 10px; font-family: 'Songti SC', serif; font-size: 19px;">今日经营提示</h3>
+                    <p style="margin: 0; color: var(--muted); font-size: 12px; line-height: 1.9;">
+                        房量按日期动态计算。待确认、已确认和已入住订单都会占用库存，取消订单后会自动释放房量。
+                    </p>
+                    <div style="margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line);">
+                        <a class="button button-primary button-block" th:href="@{/bookings/new}">
+                            <i data-lucide="calendar-plus"></i> 为客人创建预订
+                        </a>
+                    </div>
+                </aside>
+            </div>
+
+            <div class="section-heading">
+                <div>
+                    <h3>在售房型</h3>
+                    <p>展示今日至明日每类客房的剩余数量</p>
+                </div>
+                <a class="button button-sm" th:href="@{/rooms/new}">
+                    <i data-lucide="plus"></i> 新增房型
+                </a>
+            </div>
+            <section class="room-grid" th:if="${!rooms.isEmpty()}">
+                <article class="room-card" th:each="item : ${rooms}">
+                    <img class="room-card-image" th:src="${item.room.coverImage}" th:alt="${item.room.name}">
+                    <div class="room-card-body">
+                        <div class="room-card-top">
+                            <div>
+                                <h4 th:text="${item.room.name}">房型名称</h4>
+                                <span class="room-kind" th:text="${item.room.roomType} + ' · 可住 ' + ${item.room.capacity} + ' 人'">房型</span>
+                            </div>
+                            <span class="status-badge"
+                                  th:classappend="${'status-' + item.room.status.tone}"
+                                  th:text="${item.room.status.label}">房态</span>
+                        </div>
+                        <div class="amenities" th:if="${item.room.amenities != null}">
+                            <span class="amenity" th:each="amenity : ${#strings.arraySplit(item.room.amenities, ',')}"
+                                  th:text="${#strings.trim(amenity)}">设施</span>
+                        </div>
+                        <div class="room-card-bottom">
+                            <div>
+                                <div class="room-price">
+                                    <span th:text="${#numbers.formatDecimal(item.room.price, 1, 'COMMA', 0, 'POINT')}">0</span>
+                                    <small>/ 晚起</small>
+                                </div>
+                                <span class="availability" th:classappend="${item.availableRooms == 0} ? ' none' : ''"
+                                      th:text="${item.availableRooms > 0 ? '今日余 ' + item.availableRooms + ' 间' : '今日已满房'}">余量</span>
+                            </div>
+                            <a class="button button-primary button-sm"
+                               th:if="${item.availableRooms > 0}"
+                               th:href="@{/bookings/new(roomId=${item.room.id})}">
+                                立即预订 <i data-lucide="arrow-right"></i>
+                            </a>
+                            <a class="button button-sm" th:if="${item.availableRooms == 0}"
+                               th:href="@{/rooms}">调整房态</a>
+                        </div>
+                    </div>
+                </article>
+            </section>
+        </main>
+    </div>
+</div>
+<nav th:replace="~{fragments/layout :: mobileNav('homestays')}"></nav>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

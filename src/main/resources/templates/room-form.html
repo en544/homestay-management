@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${editing ? '编辑房型' : '新增房型'})}"></head>
+<body>
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar('rooms')}"></aside>
+    <div class="main-area">
+        <header th:replace="~{fragments/layout :: topbar(${editing ? '编辑房型' : '新增房型'}, '设置价格、库存与基础房态')}"></header>
+        <main class="page">
+            <section class="page-heading">
+                <div>
+                    <span class="eyebrow">ROOM PROFILE</span>
+                    <h2 th:text="${editing ? '更新房型信息' : '添加一个可售房型'}">添加一个可售房型</h2>
+                    <p>一个房型代表同一类可售客房。库存表示该房型的总房间数，订单中的间数会按日期占用库存。</p>
+                </div>
+                <a class="button" th:href="@{/rooms}">
+                    <i data-lucide="arrow-left"></i> 返回房态列表
+                </a>
+            </section>
+
+            <form class="form-layout" th:action="@{/rooms}" th:object="${roomForm}" method="post">
+                <section class="form-panel">
+                    <h3 class="form-section-title"><i data-lucide="bed-double"></i> 房型信息</h3>
+                    <input type="hidden" th:field="*{id}">
+                    <div class="form-grid">
+                        <div class="form-group full">
+                            <label class="form-label" for="homestayId">所属门店 <span class="required">*</span></label>
+                            <select class="form-select" id="homestayId" th:field="*{homestayId}">
+                                <option value="">请选择门店</option>
+                                <option th:each="homestay : ${homestays}"
+                                        th:value="${homestay.id}"
+                                        th:text="${homestay.name} + ' · ' + ${homestay.city}">门店</option>
+                            </select>
+                            <span class="field-error" th:if="${#fields.hasErrors('homestayId')}" th:errors="*{homestayId}"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="name">房型名称 <span class="required">*</span></label>
+                            <input class="form-control" id="name" type="text" th:field="*{name}"
+                                   placeholder="例如：听竹·山景大床房">
+                            <span class="field-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="roomType">房型分类 <span class="required">*</span></label>
+                            <input class="form-control" id="roomType" type="text" th:field="*{roomType}"
+                                   placeholder="大床房 / 双床房 / 套房">
+                            <span class="field-error" th:if="${#fields.hasErrors('roomType')}" th:errors="*{roomType}"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="capacity">每间可住人数 <span class="required">*</span></label>
+                            <div class="input-with-unit">
+                                <input class="form-control" id="capacity" type="number" min="1" max="20"
+                                       th:field="*{capacity}">
+                                <span class="input-unit">人</span>
+                            </div>
+                            <span class="field-error" th:if="${#fields.hasErrors('capacity')}" th:errors="*{capacity}"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="totalRooms">房间库存 <span class="required">*</span></label>
+                            <div class="input-with-unit">
+                                <input class="form-control" id="totalRooms" type="number" min="1" max="999"
+                                       th:field="*{totalRooms}">
+                                <span class="input-unit">间</span>
+                            </div>
+                            <span class="field-error" th:if="${#fields.hasErrors('totalRooms')}" th:errors="*{totalRooms}"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="price">每晚价格 <span class="required">*</span></label>
+                            <div class="input-with-unit">
+                                <input class="form-control" id="price" type="number" min="0.01" step="0.01"
+                                       th:field="*{price}">
+                                <span class="input-unit">元</span>
+                            </div>
+                            <span class="field-error" th:if="${#fields.hasErrors('price')}" th:errors="*{price}"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="status">初始房态 <span class="required">*</span></label>
+                            <select class="form-select" id="status" th:field="*{status}">
+                                <option th:each="status : ${roomStatuses}" th:value="${status}" th:text="${status.label}">房态</option>
+                            </select>
+                            <span class="field-error" th:if="${#fields.hasErrors('status')}" th:errors="*{status}"></span>
+                        </div>
+                        <div class="form-group full">
+                            <label class="form-label" for="amenities">设施与卖点 <small>使用英文逗号分隔</small></label>
+                            <input class="form-control" id="amenities" type="text" th:field="*{amenities}"
+                                   placeholder="地暖,观景露台,双人早餐">
+                            <span class="field-error" th:if="${#fields.hasErrors('amenities')}" th:errors="*{amenities}"></span>
+                        </div>
+                        <div class="form-group full">
+                            <label class="form-label" for="coverImage">房型图片</label>
+                            <input class="form-control" id="coverImage" type="text" th:field="*{coverImage}"
+                                   placeholder="/images/room-1.jpg">
+                            <p class="form-hint">项目内置 room-1.jpg 至 room-6.jpg；留空时使用门店封面。</p>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <a class="button button-ghost" th:href="@{/rooms}">取消</a>
+                        <button class="button button-primary" type="submit">
+                            <i data-lucide="save"></i>
+                            <span th:text="${editing ? '保存修改' : '创建房型'}">创建房型</span>
+                        </button>
+                    </div>
+                </section>
+
+                <aside class="panel" style="padding: 22px;">
+                    <span class="eyebrow">PRICING NOTES</span>
+                    <h3 style="margin:6px 0 12px;font-family:'Songti SC',serif;font-size:19px;">价格与库存口径</h3>
+                    <div style="display:flex;flex-direction:column;gap:16px;">
+                        <div style="padding-bottom:14px;border-bottom:1px solid var(--line);">
+                            <strong style="font-size:12px;">按晚计价</strong>
+                            <p style="margin:4px 0 0;color:var(--muted);font-size:11px;line-height:1.8;">
+                                订单金额 = 每晚价格 × 入住晚数 × 预订间数。
+                            </p>
+                        </div>
+                        <div style="padding-bottom:14px;border-bottom:1px solid var(--line);">
+                            <strong style="font-size:12px;">库存按房型聚合</strong>
+                            <p style="margin:4px 0 0;color:var(--muted);font-size:11px;line-height:1.8;">
+                                同一房型设置总库存，系统自动累加重叠日期内的订单间数。
+                            </p>
+                        </div>
+                        <div>
+                            <strong style="font-size:12px;">状态优先于库存</strong>
+                            <p style="margin:4px 0 0;color:var(--muted);font-size:11px;line-height:1.8;">
+                                保洁中或维护中的房型即使仍有库存，也不会出现在新预订的可选房型中。
+                            </p>
+                        </div>
+                    </div>
+                </aside>
+            </form>
+        </main>
+    </div>
+</div>
+<nav th:replace="~{fragments/layout :: mobileNav('rooms')}"></nav>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('房态管理')}"></head>
+<body>
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar('rooms')}"></aside>
+    <div class="main-area">
+        <header th:replace="~{fragments/layout :: topbar('房态管理', '查看房型、库存与保洁维护状态')}"></header>
+        <main class="page">
+            <div th:replace="~{fragments/layout :: flash}"></div>
+            <section class="page-heading">
+                <div>
+                    <span class="eyebrow">ROOM INVENTORY</span>
+                    <h2>房态清楚，安排才能从容</h2>
+                    <p>房态用于控制新预订：只有「可预订」房型会参与售卖。保洁中与维护中房型不开放预订。</p>
+                </div>
+                <div class="heading-actions">
+                    <a class="button button-primary" th:href="@{/rooms/new}">
+                        <i data-lucide="plus"></i> 新增房型
+                    </a>
+                </div>
+            </section>
+
+            <section class="panel">
+                <div class="panel-head">
+                    <div>
+                        <h3>全部房型</h3>
+                        <p>房量、价格与当前状态</p>
+                    </div>
+                    <span class="inventory-count">共 <strong th:text="${rooms.size()}">0</strong> 种房型</span>
+                </div>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead>
+                        <tr>
+                            <th>房型</th>
+                            <th>所属门店</th>
+                            <th>可住 / 库存</th>
+                            <th>每晚价格</th>
+                            <th>当前房态</th>
+                            <th style="text-align:right;">操作</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="room : ${rooms}">
+                            <td>
+                                <span class="table-primary" th:text="${room.name}">房型</span>
+                                <span class="table-secondary" th:text="${room.roomType} + ' · ' + ${room.amenities}">详情</span>
+                            </td>
+                            <td>
+                                <a class="table-primary" th:href="@{/homestays/{id}(id=${room.homestay.id})}"
+                                   th:text="${room.homestay.name}">门店</a>
+                                <span class="table-secondary" th:text="${room.homestay.city}">城市</span>
+                            </td>
+                            <td>
+                                <span class="table-primary" th:text="${room.capacity} + ' 人'">人数</span>
+                                <span class="table-secondary" th:text="${room.totalRooms} + ' 间库存'">库存</span>
+                            </td>
+                            <td><span class="money" th:text="${#numbers.formatDecimal(room.price, 1, 'COMMA', 0, 'POINT')}">0</span></td>
+                            <td>
+                                <form class="status-form" th:action="@{/rooms/{id}/status(id=${room.id})}" method="post">
+                                    <select class="form-select" name="status" data-auto-submit aria-label="修改房态">
+                                        <option th:each="status : ${statuses}"
+                                                th:value="${status}"
+                                                th:selected="${room.status == status}"
+                                                th:text="${status.label}">房态</option>
+                                    </select>
+                                </form>
+                            </td>
+                            <td style="text-align:right;">
+                                <a class="button button-sm" th:href="@{/rooms/{id}/edit(id=${room.id})}">
+                                    <i data-lucide="pencil"></i> 编辑
+                                </a>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <div class="section-heading">
+                <div>
+                    <h3>房态规则</h3>
+                    <p>系统如何计算可售房间</p>
+                </div>
+            </div>
+            <section class="detail-meta-bar">
+                <div class="detail-meta-item">
+                    <span class="detail-meta-icon"><i data-lucide="circle-check"></i></span>
+                    <span>
+                        <strong>可预订</strong>
+                        <span>允许创建新订单</span>
+                    </span>
+                </div>
+                <div class="detail-meta-item">
+                    <span class="detail-meta-icon"><i data-lucide="sparkles"></i></span>
+                    <span>
+                        <strong>保洁中</strong>
+                        <span>暂时停止新预订</span>
+                    </span>
+                </div>
+                <div class="detail-meta-item">
+                    <span class="detail-meta-icon"><i data-lucide="wrench"></i></span>
+                    <span>
+                        <strong>维护中</strong>
+                        <span>整类房型暂停售卖</span>
+                    </span>
+                </div>
+                <div class="detail-meta-item">
+                    <span class="detail-meta-icon"><i data-lucide="calendar-check-2"></i></span>
+                    <span>
+                        <strong>按日期占房</strong>
+                        <span>取消订单自动释放</span>
+                    </span>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+<nav th:replace="~{fragments/layout :: mobileNav('rooms')}"></nav>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

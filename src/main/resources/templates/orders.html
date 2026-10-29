@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('订单中心')}"></head>
+<body>
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar('orders')}"></aside>
+    <div class="main-area">
+        <header th:replace="~{fragments/layout :: topbar('订单中心', '查看预订、办理入住与处理取消')}"></header>
+        <main class="page">
+            <div th:replace="~{fragments/layout :: flash}"></div>
+            <section class="page-heading">
+                <div>
+                    <span class="eyebrow">RESERVATION DESK</span>
+                    <h2>每一笔预订，都有清晰的进度</h2>
+                    <p>按状态筛选订单，确认房量后办理入住。待确认与已确认订单会持续占用对应日期的库存。</p>
+                </div>
+                <div class="heading-actions">
+                    <a class="button button-primary" th:href="@{/bookings/new}">
+                        <i data-lucide="plus"></i> 新建预订
+                    </a>
+                </div>
+            </section>
+
+            <div class="toolbar">
+                <nav class="filter-tabs" aria-label="订单状态筛选">
+                    <a class="filter-tab" th:classappend="${selectedStatus == null} ? ' active' : ''" th:href="@{/orders}">
+                        全部订单
+                    </a>
+                    <a class="filter-tab" th:each="status : ${statuses}"
+                       th:classappend="${selectedStatus == status} ? ' active' : ''"
+                       th:href="@{/orders(status=${status})}"
+                       th:text="${status.label}">状态</a>
+                </nav>
+                <span class="inventory-count">当前 <strong th:text="${orders.size()}">0</strong> 笔</span>
+            </div>
+
+            <section class="panel">
+                <div class="table-wrap" th:if="${!orders.isEmpty()}">
+                    <table class="data-table">
+                        <thead>
+                        <tr>
+                            <th>订单 / 住客</th>
+                            <th>入住安排</th>
+                            <th>房型</th>
+                            <th>金额</th>
+                            <th>状态</th>
+                            <th style="text-align:right;">操作</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="order : ${orders}">
+                            <td>
+                                <a class="table-primary" th:href="@{/orders/{id}(id=${order.id})}"
+                                   th:text="${order.guestName} + ' · ' + ${order.roomCount} + '间'">住客</a>
+                                <span class="table-secondary" th:text="${order.orderNo}">订单号</span>
+                            </td>
+                            <td>
+                                <span class="table-primary" style="font-size:12px;"
+                                      th:text="${#temporals.format(order.checkIn, 'MM月dd日')} + ' - ' + ${#temporals.format(order.checkOut, 'MM月dd日')}">
+                                    日期
+                                </span>
+                                <span class="table-secondary" th:text="${order.nights} + ' 晚 · ' + ${order.guests} + ' 位住客'">晚数</span>
+                            </td>
+                            <td>
+                                <span class="table-primary" th:text="${order.room.name}">房型</span>
+                                <span class="table-secondary" th:text="${order.room.homestay.name}">门店</span>
+                            </td>
+                            <td><span class="money" th:text="${#numbers.formatDecimal(order.totalAmount, 1, 'COMMA', 0, 'POINT')}">0</span></td>
+                            <td>
+                                <span class="status-badge"
+                                      th:classappend="${'status-' + order.status.tone}"
+                                      th:text="${order.status.label}">状态</span>
+                            </td>
+                            <td style="text-align:right;">
+                                <a class="button button-sm" th:href="@{/orders/{id}(id=${order.id})}">
+                                    详情 <i data-lucide="chevron-right"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="empty-state" th:if="${orders.isEmpty()}">
+                    <div>
+                        <span class="empty-state-icon"><i data-lucide="receipt-text"></i></span>
+                        <strong>当前筛选下没有订单</strong>
+                        <p>可以切换状态，或为客人新建一笔预订。</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+<nav th:replace="~{fragments/layout :: mobileNav('orders')}"></nav>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

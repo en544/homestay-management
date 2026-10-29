@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('经营概览')}"></head>
+<body>
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar('dashboard')}"></aside>
+    <div class="main-area">
+        <header th:replace="~{fragments/layout :: topbar('经营概览', '把今天的入住、房态与营收放在同一张图里')}"></header>
+        <main class="page">
+            <div th:replace="~{fragments/layout :: flash}"></div>
+
+            <section class="welcome-band">
+                <div>
+                    <span class="eyebrow"><i data-lucide="sunrise"></i> 今日经营</span>
+                    <h2>早安，<span th:text="${adminName}">林店长</span></h2>
+                    <p>今天有 <strong th:text="${stats.arrivalsToday}">0</strong> 组客人预计到店，当前入住率
+                        <strong th:text="${stats.occupancyRate} + '%'">0%</strong>。先把待确认订单和保洁房态处理妥当。</p>
+                </div>
+                <div class="heading-actions">
+                    <a class="button button-primary" th:href="@{/bookings/new}">
+                        <i data-lucide="calendar-plus"></i> 新建预订
+                    </a>
+                    <a class="button" th:href="@{/orders(status='PENDING')}">
+                        <i data-lucide="clock-3"></i> 待确认
+                        <span th:text="'(' + ${stats.pendingOrders} + ')'">(0)</span>
+                    </a>
+                </div>
+            </section>
+
+            <section class="kpi-grid" aria-label="经营指标">
+                <article class="kpi-card">
+                    <div class="kpi-head">
+                        <span>在营门店</span>
+                        <span class="kpi-icon"><i data-lucide="house"></i></span>
+                    </div>
+                    <div class="kpi-value"><span th:text="${stats.activeHomestays}">0</span><small>家</small></div>
+                    <div class="kpi-foot">分布在 3 个热门目的地</div>
+                </article>
+                <article class="kpi-card">
+                    <div class="kpi-head">
+                        <span>可售房量</span>
+                        <span class="kpi-icon accent"><i data-lucide="bed-double"></i></span>
+                    </div>
+                    <div class="kpi-value"><span th:text="${stats.totalInventory}">0</span><small>间</small></div>
+                    <div class="kpi-foot">今日已入住 <span th:text="${stats.occupied}">0</span> 间</div>
+                </article>
+                <article class="kpi-card">
+                    <div class="kpi-head">
+                        <span>今日入住率</span>
+                        <span class="kpi-icon gold"><i data-lucide="chart-no-axes-column-increasing"></i></span>
+                    </div>
+                    <div class="kpi-value"><span th:text="${stats.occupancyRate}">0</span><small>%</small></div>
+                    <div class="kpi-foot">已确认与在住订单口径</div>
+                </article>
+                <article class="kpi-card">
+                    <div class="kpi-head">
+                        <span>今日到店</span>
+                        <span class="kpi-icon info"><i data-lucide="luggage"></i></span>
+                    </div>
+                    <div class="kpi-value"><span th:text="${stats.arrivalsToday}">0</span><small>组</small></div>
+                    <div class="kpi-foot">建议提前确认到店时间</div>
+                </article>
+                <article class="kpi-card">
+                    <div class="kpi-head">
+                        <span>累计营收</span>
+                        <span class="kpi-icon"><i data-lucide="circle-dollar-sign"></i></span>
+                    </div>
+                    <div class="kpi-value">
+                        <small style="margin-right: 3px; color: var(--ink); font-family: Georgia, serif; font-size: 17px;">¥</small>
+                        <span th:text="${#numbers.formatDecimal(stats.revenue, 1, 'COMMA', 0, 'POINT')}">0</span>
+                    </div>
+                    <div class="kpi-foot">已完成订单累计收入</div>
+                </article>
+            </section>
+
+            <div class="dashboard-grid">
+                <section class="panel">
+                    <div class="panel-head">
+                        <div>
+                            <h3>未来七天入住率</h3>
+                            <p>根据已确认与在住订单实时计算</p>
+                        </div>
+                        <a class="text-link" th:href="@{/orders}">查看订单 <i data-lucide="arrow-up-right"></i></a>
+                    </div>
+                    <div class="occupancy-chart">
+                        <div class="chart-column" th:each="point : ${weeklyOccupancy}">
+                            <span class="chart-value" th:text="${point.rate} + '%'">0%</span>
+                            <div class="chart-track">
+                                <div class="chart-bar" th:style="'height:' + ${point.rate} + '%'"></div>
+                            </div>
+                            <span class="chart-day" th:text="${#temporals.format(point.date, 'EEE')}">周四</span>
+                            <span class="chart-label" th:text="${#temporals.format(point.date, 'MM/dd')}">10/22</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <div class="panel-head">
+                        <div>
+                            <h3>今日到店</h3>
+                            <p>到店客人接待清单</p>
+                        </div>
+                        <span class="status-badge status-info" th:text="${stats.arrivalsToday} + ' 组'">0 组</span>
+                    </div>
+                    <div class="arrival-list" th:if="${!stats.arrivals.isEmpty()}">
+                        <a class="arrival-item" th:each="arrival : ${stats.arrivals}"
+                           th:href="@{/orders/{id}(id=${arrival.id})}">
+                            <span class="arrival-time">今日</span>
+                            <span class="arrival-main">
+                                <strong th:text="${arrival.guestName} + ' · ' + ${arrival.roomCount} + '间'">客人</strong>
+                                <span th:text="${arrival.room.homestay.name} + ' / ' + ${arrival.room.name}">房型</span>
+                            </span>
+                            <i data-lucide="chevron-right" style="width:16px;height:16px;color:var(--faint);"></i>
+                        </a>
+                    </div>
+                    <div class="empty-state" th:if="${stats.arrivals.isEmpty()}">
+                        <div>
+                            <span class="empty-state-icon"><i data-lucide="coffee"></i></span>
+                            <strong>今天暂没有待接待客人</strong>
+                            <p>可以检查一下明日的预订和房态。</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div class="dashboard-grid equal">
+                <section class="panel">
+                    <div class="panel-head">
+                        <div>
+                            <h3>最近订单</h3>
+                            <p>最新预订与状态变化</p>
+                        </div>
+                        <a class="text-link" th:href="@{/orders}">全部订单 <i data-lucide="arrow-right"></i></a>
+                    </div>
+                    <div class="table-wrap">
+                        <table class="data-table">
+                            <thead>
+                            <tr>
+                                <th>住客 / 房型</th>
+                                <th>入住日期</th>
+                                <th>金额</th>
+                                <th>状态</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="order : ${stats.recentOrders}">
+                                <td>
+                                    <a class="table-primary" th:href="@{/orders/{id}(id=${order.id})}"
+                                       th:text="${order.guestName}">住客</a>
+                                    <span class="table-secondary"
+                                          th:text="${order.room.homestay.name} + ' · ' + ${order.room.name}">房型</span>
+                                </td>
+                                <td th:text="${#temporals.format(order.checkIn, 'MM-dd')}">10-22</td>
+                                <td><span class="money" th:text="${#numbers.formatDecimal(order.totalAmount, 1, 'COMMA', 0, 'POINT')}">0</span></td>
+                                <td>
+                                    <span class="status-badge"
+                                          th:classappend="${'status-' + order.status.tone}"
+                                          th:text="${order.status.label}">状态</span>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <div class="panel-head">
+                        <div>
+                            <h3>房态速览</h3>
+                            <p>当前房型状态与可售数量</p>
+                        </div>
+                        <a class="text-link" th:href="@{/rooms}">管理房态 <i data-lucide="arrow-right"></i></a>
+                    </div>
+                    <div class="room-alert-list">
+                        <div class="room-alert-item" th:each="room : ${stats.rooms}">
+                            <span class="room-alert-icon"
+                                  th:classappend="${room.status.tone}"
+                                  th:switch="${room.status.name()}">
+                                <i th:case="'AVAILABLE'" data-lucide="check"></i>
+                                <i th:case="'CLEANING'" data-lucide="sparkles"></i>
+                                <i th:case="*" data-lucide="wrench"></i>
+                            </span>
+                            <div class="arrival-main">
+                                <strong th:text="${room.name}">房型</strong>
+                                <span th:text="${room.homestay.name} + ' · 共 ' + ${room.totalRooms} + ' 间'">门店</span>
+                            </div>
+                            <span class="status-badge"
+                                  th:classappend="${'status-' + room.status.tone}"
+                                  th:text="${room.status.label}">状态</span>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+</div>
+<nav th:replace="~{fragments/layout :: mobileNav('dashboard')}"></nav>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

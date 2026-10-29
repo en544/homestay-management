@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('新建预订')}"></head>
+<body>
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar('orders')}"></aside>
+    <div class="main-area">
+        <header th:replace="~{fragments/layout :: topbar('新建预订', '录入住客信息并锁定对应日期的房量')}"></header>
+        <main class="page">
+            <section class="page-heading">
+                <div>
+                    <span class="eyebrow">NEW RESERVATION</span>
+                    <h2>为客人安排一次入住</h2>
+                    <p>系统会按日期检查可售房量。提交后订单进入待确认状态，确认、入住、完成和取消均可继续流转。</p>
+                </div>
+                <a class="button" th:href="@{/orders}">
+                    <i data-lucide="receipt-text"></i> 返回订单中心
+                </a>
+            </section>
+
+            <div class="alert alert-error" th:if="${formError}">
+                <i data-lucide="circle-alert"></i><span th:text="${formError}">预订未完成</span>
+            </div>
+
+            <form class="form-layout" th:action="@{/bookings}" th:object="${bookingForm}" method="post" data-booking-form>
+                <section class="form-panel">
+                    <h3 class="form-section-title"><i data-lucide="calendar-days"></i> 入住安排</h3>
+                    <div class="form-grid">
+                        <div class="form-group full">
+                            <label class="form-label" for="roomId">选择房型 <span class="required">*</span></label>
+                            <select class="form-select" id="roomId" th:field="*{roomId}">
+                                <option value="">请选择房型</option>
+                                <option th:each="room : ${rooms}"
+                                        th:value="${room.id}"
+                                        th:text="${room.homestay.name} + ' · ' + ${room.name} + ' · ¥' + ${#numbers.formatDecimal(room.price, 1, 'COMMA', 0, 'POINT')}"
+                                        th:attr="data-price=${room.price},
+                                                 data-capacity=${room.capacity},
+                                                 data-available=${selectedAvailable != null && selectedRoom != null && room.id == selectedRoom.id ? selectedAvailable : room.totalRooms},
+                                                 data-room-name=${room.name},
+                                                 data-homestay=${room.homestay.name},
+                                                 data-city=${room.homestay.city},
+                                                 data-image=${room.coverImage}">
+                                    房型
+                                </option>
+                            </select>
+                            <span class="field-error" th:if="${#fields.hasErrors('roomId')}" th:errors="*{roomId}"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="checkIn">入住日期 <span class="required">*</span></label>
+                            <input class="form-control" id="checkIn" type="date" th:field="*{checkIn}"
+                                   th:min="${#temporals.format(today, 'yyyy-MM-dd')}">
+                            <span class="field-error" th:if="${#fields.hasErrors('checkIn')}" th:errors="*{checkIn}"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="checkOut">离店日期 <span class="required">*</span></label>
+                            <input class="form-control" id="checkOut" type="date" th:field="*{checkOut}">
+                            <span class="field-error" th:if="${#fields.hasErrors('checkOut')}" th:errors="*{checkOut}"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="roomCount">预订间数 <span class="required">*</span></label>
+                            <div class="input-with-unit">
+                                <input class="form-control" id="roomCount" type="number" min="1" max="10"
+                                       th:field="*{roomCount}">
+                                <span class="input-unit">间</span>
+                            </div>
+                            <span class="field-error" th:if="${#fields.hasErrors('roomCount')}" th:errors="*{roomCount}"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="guests">入住人数 <span class="required">*</span></label>
+                            <div class="input-with-unit">
+                                <input class="form-control" id="guests" type="number" min="1" max="30"
+                                       th:field="*{guests}">
+                                <span class="input-unit">人</span>
+                            </div>
+                            <p class="form-hint" data-booking-capacity>按房型可住人数自动校验</p>
+                            <span class="field-error" th:if="${#fields.hasErrors('guests')}" th:errors="*{guests}"></span>
+                        </div>
+                    </div>
+
+                    <h3 class="form-section-title" style="margin-top: 28px;"><i data-lucide="user-round"></i> 住客信息</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label" for="guestName">入住人姓名 <span class="required">*</span></label>
+                            <input class="form-control" id="guestName" type="text" th:field="*{guestName}"
+                                   placeholder="请输入真实姓名">
+                            <span class="field-error" th:if="${#fields.hasErrors('guestName')}" th:errors="*{guestName}"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="guestPhone">联系电话 <span class="required">*</span></label>
+                            <input class="form-control" id="guestPhone" type="tel" th:field="*{guestPhone}"
+                                   placeholder="11 位手机号码">
+                            <span class="field-error" th:if="${#fields.hasErrors('guestPhone')}" th:errors="*{guestPhone}"></span>
+                        </div>
+                        <div class="form-group full">
+                            <label class="form-label" for="note">订单备注 <small>选填</small></label>
+                            <textarea class="form-textarea" id="note" th:field="*{note}"
+                                      placeholder="例如：预计到店时间、儿童入住、安静房间等需求"></textarea>
+                            <span class="field-error" th:if="${#fields.hasErrors('note')}" th:errors="*{note}"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <a class="button button-ghost" th:href="@{/orders}">取消</a>
+                        <button class="button button-primary" type="submit">
+                            <i data-lucide="check"></i> 创建预订
+                        </button>
+                    </div>
+                </section>
+
+                <aside class="summary-card">
+                    <img class="summary-image" data-summary-image
+                         th:src="${selectedRoom != null ? selectedRoom.coverImage : '/images/room-1.jpg'}"
+                         alt="所选房型">
+                    <div class="summary-body">
+                        <span class="summary-kicker">RESERVATION SUMMARY</span>
+                        <h3 data-summary-title
+                            th:text="${selectedRoom != null ? selectedRoom.name : '请选择房型'}">请选择房型</h3>
+                        <span class="summary-location" data-summary-location
+                              th:text="${selectedRoom != null ? selectedRoom.homestay.name + ' · ' + selectedRoom.homestay.city : '选择后显示门店与城市'}">选择房型</span>
+                        <div class="summary-separator"></div>
+                        <div class="summary-row">
+                            <span>入住晚数</span>
+                            <strong data-booking-nights>1 晚</strong>
+                        </div>
+                        <div class="summary-row">
+                            <span>房量情况</span>
+                            <strong data-booking-available
+                                    th:text="${selectedAvailable != null ? selectedAvailable + ' 间可订' : '按日期校验'}">按日期校验</strong>
+                        </div>
+                        <div class="summary-row">
+                            <span>订单状态</span>
+                            <strong>提交后待确认</strong>
+                        </div>
+                        <div class="summary-total">
+                            <span>预计房费</span>
+                            <strong data-booking-total>0</strong>
+                        </div>
+                        <p class="summary-note">金额为房费预估，尚未接入在线支付。请在客人到店前完成订单确认。</p>
+                    </div>
+                </aside>
+            </form>
+        </main>
+    </div>
+</div>
+<nav th:replace="~{fragments/layout :: mobileNav('orders')}"></nav>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

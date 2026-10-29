@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('录入评价')}"></head>
+<body>
+<div class="app-shell">
+    <aside th:replace="~{fragments/layout :: sidebar('reviews')}"></aside>
+    <div class="main-area">
+        <header th:replace="~{fragments/layout :: topbar('录入评价', '记录住客对本次入住的真实反馈')}"></header>
+        <main class="page">
+            <section class="page-heading">
+                <div>
+                    <span class="eyebrow">GUEST FEEDBACK</span>
+                    <h2>记录这次入住感受</h2>
+                    <p>课程演示中由管理员代录评价。评价与已完成订单一一对应，提交后可继续在评价页回复。</p>
+                </div>
+                <a class="button" th:href="@{/orders/{id}(id=${order.id})}">
+                    <i data-lucide="arrow-left"></i> 返回订单
+                </a>
+            </section>
+
+            <div class="form-layout">
+                <form class="form-panel" th:action="@{/reviews}" method="post">
+                    <input type="hidden" name="orderId" th:value="${order.id}">
+                    <h3 class="form-section-title"><i data-lucide="star"></i> 评价内容</h3>
+                    <div class="form-group">
+                        <span class="form-label">入住评分 <span class="required">*</span></span>
+                        <div class="star-picker">
+                            <span class="star-option" th:each="rating : ${#numbers.sequence(1, 5)}">
+                                <input type="radio" name="rating" th:id="'star-' + ${rating}"
+                                       th:value="${rating}" th:checked="${rating == 5}">
+                                <label th:for="'star-' + ${rating}" th:title="${rating} + '分'">
+                                    <i data-lucide="star"></i>
+                                </label>
+                            </span>
+                        </div>
+                        <p class="form-hint">5 分代表非常满意，1 分代表体验较差。</p>
+                    </div>
+                    <div class="form-group" style="margin-top:20px;">
+                        <label class="form-label" for="content">评价正文 <span class="required">*</span></label>
+                        <textarea class="form-textarea" id="content" name="content" minlength="5" maxlength="800"
+                                  style="min-height:180px;" required
+                                  placeholder="记录住客对空间、服务、早餐、交通等方面的感受"></textarea>
+                        <p class="form-hint">至少填写 5 个字符，最多 800 个字符。</p>
+                    </div>
+                    <div class="form-actions">
+                        <a class="button button-ghost" th:href="@{/orders/{id}(id=${order.id})}">取消</a>
+                        <button class="button button-primary" type="submit">
+                            <i data-lucide="send"></i> 发布评价
+                        </button>
+                    </div>
+                </form>
+
+                <aside class="summary-card">
+                    <img class="summary-image" th:src="${order.room.coverImage}" th:alt="${order.room.name}">
+                    <div class="summary-body">
+                        <span class="summary-kicker">ORDER CONTEXT</span>
+                        <h3 th:text="${order.guestName}">住客</h3>
+                        <span class="summary-location"
+                              th:text="${order.room.homestay.name} + ' · ' + ${order.room.name}">门店</span>
+                        <div class="summary-separator"></div>
+                        <div class="summary-row">
+                            <span>入住日期</span>
+                            <strong th:text="${#temporals.format(order.checkIn, 'MM-dd')} + ' 至 ' + ${#temporals.format(order.checkOut, 'MM-dd')}">日期</strong>
+                        </div>
+                        <div class="summary-row">
+                            <span>入住人数</span>
+                            <strong th:text="${order.guests} + ' 人'">人数</strong>
+                        </div>
+                        <div class="summary-row">
+                            <span>订单状态</span>
+                            <strong th:text="${order.status.label}">状态</strong>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </main>
+    </div>
+</div>
+<nav th:replace="~{fragments/layout :: mobileNav('reviews')}"></nav>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#153a35">
+    <title>登录 · 栖居民宿管理</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<main class="login-page">
+    <section class="login-visual">
+        <img class="login-visual-image" th:src="@{/images/stay-3.jpg}" alt="山间民宿与泳池">
+        <div class="login-visual-content">
+            <div class="login-brand">
+                <span class="brand-mark"><i data-lucide="mountain"></i></span>
+                <span>
+                    <strong>栖居民宿</strong>
+                    <span>QIJU STAY MANAGEMENT</span>
+                </span>
+            </div>
+            <div class="login-quote">
+                <h1>把每一间房，<br>照顾得恰到好处。</h1>
+                <p>房源、房态、预订与住客反馈集中管理，让日常经营更从容，也让每一次抵达都有被认真准备。</p>
+            </div>
+            <span class="login-caption">HOSPITALITY, MANAGED WITH CARE · 2026</span>
+        </div>
+    </section>
+
+    <section class="login-form-side">
+        <div class="login-form-box">
+            <span class="login-kicker">ADMIN PORTAL</span>
+            <h2>欢迎回来</h2>
+            <p>使用门店管理员账号进入经营后台。</p>
+
+            <div class="alert alert-error" th:if="${loginError}">
+                <i data-lucide="circle-alert"></i><span th:text="${loginError}">账号或密码错误</span>
+            </div>
+
+            <form th:action="@{/login}" th:object="${loginForm}" method="post">
+                <div class="login-form-group">
+                    <label class="form-label" for="username">管理员账号</label>
+                    <div class="login-input-wrap">
+                        <i data-lucide="user-round"></i>
+                        <input class="form-control" id="username" type="text" th:field="*{username}"
+                               placeholder="请输入账号" autocomplete="username" required autofocus>
+                    </div>
+                </div>
+                <div class="login-form-group">
+                    <label class="form-label" for="password">登录密码</label>
+                    <div class="login-input-wrap">
+                        <i data-lucide="lock-keyhole"></i>
+                        <input class="form-control" id="password" type="password" th:field="*{password}"
+                               placeholder="请输入密码" autocomplete="current-password" required>
+                    </div>
+                </div>
+                <button class="button button-primary login-submit" type="submit">
+                    进入经营后台 <i data-lucide="arrow-right"></i>
+                </button>
+            </form>
+
+            <div class="login-hint">
+                课程演示账号 <code>admin</code>，密码 <code>123456</code>
+            </div>
+        </div>
+    </section>
+</main>
+<script th:src="@{/js/lucide.min.js}"></script>
+<script>window.lucide && window.lucide.createIcons();</script>
+</body>
+</html>
